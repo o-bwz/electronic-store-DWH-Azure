@@ -1,0 +1,18 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"workspaceName": {
+			"value": "electronicstore-dwh"
+		},
+		"electronicstore-dwh-WorkspaceDefaultSqlServer_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:electronicstore-dwh.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
+		},
+		"LS_data_lake_properties_typeProperties_url": {
+			"value": "https://electronicstoredwhlake.dfs.core.windows.net/"
+		},
+		"electronicstore-dwh-WorkspaceDefaultStorage_properties_typeProperties_url": {
+			"value": "https://analyticsdatalake2026.dfs.core.windows.net"
+		}
+	}
+}
