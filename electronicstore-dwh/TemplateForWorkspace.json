@@ -822,7 +822,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"content": {
-					"query": "if not EXISTS (SELECT * from sys.tables t JOIN sys.schemas s on t.schema_id=s.schema_id WHERE t.name ='DimCustomer' and s.name='gold')\n    CREATE EXTERNAL TABLE gold.Dimcustomer\n     WITH \n     (\n         location ='DimCustomer',\n         data_source =gold_source,\n         file_format=parquet_format\n     )\n    as\n        SELECT\n            DISTINCT\n            customerID,\n            CustomerName,\n            CustomerEmail,\n            Domain ,\n            ROW_NUMBER()OVER (ORDER BY customerID) as DimCustomerKey\n        FROM silver.Silvertable\n\n\nselect * from gold.Dimcustomer   ",
+					"query": "---------------------------\n--DimCustomer\n-----------------------------------------------\n\nif not EXISTS (SELECT * from sys.tables t JOIN sys.schemas s on t.schema_id=s.schema_id WHERE t.name ='DimCustomer' and s.name='gold')\n\n    CREATE EXTERNAL TABLE gold.Dimcustomer\n\n     WITH\n\n     (\n\n         location ='DimCustomer',\n\n         data_source =gold_source,\n\n         file_format=parquet_format\n\n     )\n\n    as\n    SELECT *, ROW_NUMBER()OVER (ORDER BY T.customerID) as DimCustomerKey\n    FROM\n       ( SELECT\n\n            DISTINCT\n\n            customerID,\n\n            CustomerName,\n\n            CustomerEmail,\n\n            Domain \n\n           \n\n        FROM silver.Silvertable) T\n\n\n\n\n\nselect * from gold.Dimcustomer  \n\n\n\n\n\n---------------------------------------------\n\n--DimProduct\n\n-----------------------------------------------\nif not EXISTS (SELECT * from sys.tables t JOIN sys.schemas s on t.schema_id=s.schema_id WHERE t.name ='DimProduct' and s.name='gold')\n\n    CREATE EXTERNAL TABLE gold.Dimproduct\n\n     WITH\n\n     (\n\n         location ='DimProduct',\n\n         data_source =gold_source,\n\n         file_format=parquet_format\n\n     )\n\n    as\n    SELECT * , ROW_NUMBER()OVER (ORDER BY T.ProductID) as DimProductKey \n    From (\n        SELECT\n\n            DISTINCT\n\n           ProductID,\n\n           ProductName,\n\n           ProductCategory\n\n           \n\n          \n\n        FROM silver.Silvertable) T\n\n\n\nSELECT * from gold.Dimproduct\n\n\n\n----------------------------------------------\n\n--DimGeography\n\n\n\n-----------------------------------------------\nif not EXISTS (SELECT * from sys.tables t JOIN sys.schemas s on t.schema_id=s.schema_id WHERE t.name ='DimGeography' and s.name='gold')\n\n    CREATE EXTERNAL TABLE gold.DimGeography\n\n     WITH\n\n     (\n\n         location ='DimGeography',\n\n         data_source =gold_source,\n\n         file_format=parquet_format\n\n     )\n\n    as\n    SELECT *, ROW_NUMBER()OVER (ORDER BY T.RegionID) as DimGeographyKey\n    FROM\n        (SELECT\n\n            DISTINCT\n\n            RegionID,\n\n            Country\n\n\n        FROM silver.Silvertable) T\n\n\n\n\n\nselect * from gold.DimGeography  \n\n\n\n\n\n--------------------------------------------\n\n--DimOrders\n\n\n\n-----------------------------------------------\n\nif not EXISTS (SELECT * from sys.tables t JOIN sys.schemas s on t.schema_id=s.schema_id WHERE t.name ='DimOrders' and s.name='gold')\n\n    CREATE EXTERNAL TABLE gold.DimOrders\n\n     WITH\n\n     (\n\n         location ='DimOrders',\n\n         data_source =gold_source,\n\n         file_format=parquet_format\n\n     )\n\n    as\n    SELECT * ,ROW_NUMBER()OVER (ORDER BY T.OrderID) as DimOrdersKey\n    From\n       ( SELECT\n\n            OrderID,\n\n            customerID,\n\n            CustomerName,\n\n            CustomerEmail,\n\n            ProductID,\n\n            ProductName,\n\n            ProductCategory,\n\n            RegionID,\n\n            Country,\n\n            Domain \n\n\n        FROM silver.Silvertable) T\n\n\n\n",
 					"metadata": {
 						"language": "sql"
 					},
@@ -843,6 +843,26 @@
 			"properties": {
 				"content": {
 					"query": "\nCREATE MASTER key ENCRYPTION by password = '123#123@ABCabc'\n\n---------------------------------\n--Database scoped credential\n---------------------------------\ncreate DATABASE SCOPED CREDENTIAL omar_creds\nWITH IDENTITY = 'Managed Identity'\n\n----------------------------------\n--Extarnal Data Source\n----------------------------------\ncreate EXTERNAL data SOURCE silver_source\nwith \n(\nLOCATION ='https://electronicstoredwhlake.dfs.core.windows.net/silver/',\nCREDENTIAL = omar_creds\n)\n\n\ncreate EXTERNAL data SOURCE gold_source\nwith \n(\nLOCATION ='https://electronicstoredwhlake.dfs.core.windows.net/gold/',\nCREDENTIAL = omar_creds\n\n)\n-----------------------------------\n--Extarnal file format\n----------------------------------\n\ncreate EXTERNAL FILE FORMAT delta\nWITH \n(\n    FORMAT_TYPE =DELTA,\n)\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "SalesDWH",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Fact')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "-----------------\n--Fact\n--------------------------\nif not EXISTS (SELECT * from sys.tables t JOIN sys.schemas s on t.schema_id=s.schema_id \n                    WHERE t.name='FactOrders' and s.name='gold' )\nCREATE EXTERNAL TABLE  gold.FactOrders\nwith \n(\n    LOCATION='FactOrders',\n    DATA_SOURCE=gold_source,\n    FILE_FORMAT=parquet_format\n)\nas\nSELECT \n    O.DimOrdersKey,\n    C.DimCustomerKey,  -- تم تصحيح اسم المفتاح هنا\n    P.DimProductKey,\n    G.DimGeographyKey,\n    F.Quantity,\n    F.UnitPrice,\n    F.TotalAmount\nFROM \n    silver.Silvertable F\nLEFT JOIN \n    gold.DimOrders O ON F.OrderId = O.OrderID\nLEFT JOIN \n    gold.Dimcustomer C ON F.CustomerID = C.CustomerID \nLEFT JOIN\n    gold.Dimproduct P ON F.ProductID = P.ProductID\nLEFT JOIN \n    gold.DimGeography G ON F.RegionID = G.RegionID AND F.Country = G.Country\n\n\n\nSELECT * from gold.FactOrders",
 					"metadata": {
 						"language": "sql"
 					},
