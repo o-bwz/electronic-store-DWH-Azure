@@ -739,7 +739,27 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"content": {
-					"query": "\nCREATE MASTER key ENCRYPTION by password = '123#123@ABCabc'\n\n---------------------------------\n--Database scoped credential\n---------------------------------\ncreate DATABASE SCOPED CREDENTIAL omar_creds\nWITH IDENTITY = 'Managed Identity'\n\n----------------------------------\n--Extarnal Data Source\n----------------------------------\ncreate EXTERNAL data SOURCE silver_source\nwith \n(\nLOCATION ='https://electronicstoredwhlake.dfs.core.windows.net/silver/',\nCREDENTIAL = omar_creds\n\n)\n\n\ncreate EXTERNAL data SOURCE gold_source\nwith \n(\nLOCATION ='https://electronicstoredwhlake.dfs.core.windows.net/gold/',\nCREDENTIAL = omar_creds\n\n)\n-----------------------------------\n--Extarnal file format\n----------------------------------\n\ncreate EXTERNAL FILE FORMAT delta\nWITH \n(\n    FORMAT_TYPE =DELTA,\n)\n",
+					"query": "\nCREATE MASTER key ENCRYPTION by password = '123#123@ABCabc'\n\n---------------------------------\n--Database scoped credential\n---------------------------------\ncreate DATABASE SCOPED CREDENTIAL omar_creds\nWITH IDENTITY = 'Managed Identity'\n\n----------------------------------\n--Extarnal Data Source\n----------------------------------\ncreate EXTERNAL data SOURCE silver_source\nwith \n(\nLOCATION ='https://electronicstoredwhlake.dfs.core.windows.net/silver/',\nCREDENTIAL = omar_creds\n)\n\n\ncreate EXTERNAL data SOURCE gold_source\nwith \n(\nLOCATION ='https://electronicstoredwhlake.dfs.core.windows.net/gold/',\nCREDENTIAL = omar_creds\n\n)\n-----------------------------------\n--Extarnal file format\n----------------------------------\n\ncreate EXTERNAL FILE FORMAT delta\nWITH \n(\n    FORMAT_TYPE =DELTA,\n)\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "SalesDWH",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 1')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "\ncreate EXTERNAL TABLE silver.Silvertable\n(\n    OrderID VARCHAR(50),\n    OrderDate DATETIME2,\n    CustomerID VARCHAR(50),\n    CustomerName VARCHAR(50),\n    CustomerEmail VARCHAR(70),\n    ProductID VARCHAR(50) ,\n    ProductName VARCHAR(50) ,\n    ProductCategory VARCHAR(50) ,\n    RegionID VARCHAR(50) ,\n    RegionName VARCHAR(50) ,\n    Country VARCHAR(50) ,\n    Quantity VARCHAR(50) ,\n    UnitPrice INT ,\n    TotalAmount INT,\n    Domain VARCHAR(50) \n)",
 					"metadata": {
 						"language": "sql"
 					},
@@ -774,15 +794,22 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/s')]",
+			"name": "[concat(parameters('workspaceName'), '/silver table')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"content": {
+					"query": "\ncreate EXTERNAL TABLE silver.Silvertable\n(\n    OrderID VARCHAR(50),\n    OrderDate DATETIME2,\n    CustomerID VARCHAR(50),\n    CustomerName VARCHAR(50),\n    CustomerEmail VARCHAR(70),\n    ProductID VARCHAR(50) ,\n    ProductName VARCHAR(50) ,\n    ProductCategory VARCHAR(50) ,\n    RegionID VARCHAR(50) ,\n    RegionName VARCHAR(50) ,\n    Country VARCHAR(50) ,\n    Quantity VARCHAR(50) ,\n    UnitPrice INT ,\n    TotalAmount INT,\n    Domain VARCHAR(50) \n)\nWITH \n(  \nLOCATION ='enrchiedSales',\n    DATA_SOURCE=silver_source,\n    FILE_FORMAT = parquet_format\n)",
 					"metadata": {
 						"language": "sql"
-					}
-				}
+					},
+					"currentConnection": {
+						"databaseName": "SalesDWH",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
 			},
 			"dependsOn": []
 		}
