@@ -1,0 +1,17 @@
+{
+	"name": "Ext_table",
+	"properties": {
+		"content": {
+			"query": "\nCREATE MASTER key ENCRYPTION by password = '123#123@ABCabc'\n\n---------------------------------\n--Database scoped credential\n---------------------------------\ncreate DATABASE SCOPED CREDENTIAL omar_creds\nWITH IDENTITY = 'Managed Identity'\n\n----------------------------------\n--Extarnal Data Source\n----------------------------------\ncreate EXTERNAL data SOURCE silver_source\nwith \n(\nLOCATION ='https://electronicstoredwhlake.dfs.core.windows.net/silver/',\nCREDENTIAL = omar_creds\n\n)\n\n\ncreate EXTERNAL data SOURCE gold_source\nwith \n(\nLOCATION ='https://electronicstoredwhlake.dfs.core.windows.net/gold/',\nCREDENTIAL = omar_creds\n\n)\n-----------------------------------\n--Extarnal file format\n----------------------------------\n\ncreate EXTERNAL FILE FORMAT delta\nWITH \n(\n    FORMAT_TYPE =DELTA,\n)\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "SalesDWH",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
