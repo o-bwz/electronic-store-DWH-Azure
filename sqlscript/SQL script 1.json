@@ -1,0 +1,17 @@
+{
+	"name": "SQL script 1",
+	"properties": {
+		"content": {
+			"query": "\ncreate EXTERNAL TABLE silver.Silvertable\n(\n    OrderID VARCHAR(50),\n    OrderDate DATETIME2,\n    CustomerID VARCHAR(50),\n    CustomerName VARCHAR(50),\n    CustomerEmail VARCHAR(70),\n    ProductID VARCHAR(50) ,\n    ProductName VARCHAR(50) ,\n    ProductCategory VARCHAR(50) ,\n    RegionID VARCHAR(50) ,\n    RegionName VARCHAR(50) ,\n    Country VARCHAR(50) ,\n    Quantity VARCHAR(50) ,\n    UnitPrice INT ,\n    TotalAmount INT,\n    Domain VARCHAR(50) \n)",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "SalesDWH",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
