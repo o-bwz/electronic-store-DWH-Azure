@@ -12,6 +12,10 @@
 			"metadata": "Secure string for 'connectionString' of 'electronicstore-dwh-WorkspaceDefaultSqlServer'",
 			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:electronicstore-dwh.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
 		},
+		"ext_lake_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ext_lake'"
+		},
 		"LS_data_lake_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://electronicstoredwhlake.dfs.core.windows.net/"
@@ -19,6 +23,10 @@
 		"electronicstore-dwh-WorkspaceDefaultStorage_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://analyticsdatalake2026.dfs.core.windows.net"
+		},
+		"ext_lake_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://electronicstoredwhlake.dfs.core.windows.net/"
 		}
 	},
 	"variables": {
@@ -598,6 +606,29 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/ext_lake')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('ext_lake_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('ext_lake_accountKey')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/AutoResolveIntegrationRuntime')]",
 			"type": "Microsoft.Synapse/workspaces/integrationRuntimes",
 			"apiVersion": "2019-06-01-preview",
@@ -699,6 +730,26 @@
 			"properties": {
 				"type": "ManagedIdentity",
 				"typeProperties": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Ext_table')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "\nCREATE MASTER key ENCRYPTION by password = '123#123@ABCabc'\n\n---------------------------------\n--Database scoped credential\n---------------------------------\ncreate DATABASE SCOPED CREDENTIAL omar_creds\nWITH IDENTITY = 'Managed Identity'\n\n----------------------------------\n--Extarnal Data Source\n----------------------------------\ncreate EXTERNAL data SOURCE silver_source\nwith \n(\nLOCATION ='https://electronicstoredwhlake.dfs.core.windows.net/silver/',\nCREDENTIAL = omar_creds\n\n)\n\n\ncreate EXTERNAL data SOURCE gold_source\nwith \n(\nLOCATION ='https://electronicstoredwhlake.dfs.core.windows.net/gold/',\nCREDENTIAL = omar_creds\n\n)\n-----------------------------------\n--Extarnal file format\n----------------------------------\n\ncreate EXTERNAL FILE FORMAT delta\nWITH \n(\n    FORMAT_TYPE =DELTA,\n)\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "SalesDWH",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
 			},
 			"dependsOn": []
 		}
