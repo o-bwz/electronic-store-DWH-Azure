@@ -2,7 +2,7 @@
 	"name": "silver table",
 	"properties": {
 		"content": {
-			"query": "\ncreate EXTERNAL TABLE silver.Silvertable\n(\n    OrderID VARCHAR(50),\n    OrderDate DATETIME2,\n    CustomerID VARCHAR(50),\n    CustomerName VARCHAR(50),\n    CustomerEmail VARCHAR(70),\n    ProductID VARCHAR(50) ,\n    ProductName VARCHAR(50) ,\n    ProductCategory VARCHAR(50) ,\n    RegionID VARCHAR(50) ,\n    RegionName VARCHAR(50) ,\n    Country VARCHAR(50) ,\n    Quantity VARCHAR(50) ,\n    UnitPrice INT ,\n    TotalAmount INT,\n    Domain VARCHAR(50) \n)\nWITH \n(  \nLOCATION ='enrchiedSales',\n    DATA_SOURCE=silver_source,\n    FILE_FORMAT = parquet_format\n)",
+			"query": "\nif not EXISTS (SELECT * from sys.tables t join sys.schemas s on t.schema_id = s.schema_id \nwhere t.name ='Silvertable' and s.name ='silver' )\n\n    create EXTERNAL TABLE silver.Silvertable\n    (\n        OrderID VARCHAR(50),\n        OrderDate DATE,\n        CustomerID VARCHAR(50),\n        CustomerName VARCHAR(50),\n        CustomerEmail VARCHAR(70),\n        ProductID VARCHAR(50) ,\n        ProductName VARCHAR(50) ,\n        ProductCategory VARCHAR(50) ,\n        RegionID VARCHAR(50) ,\n        RegionName VARCHAR(50) ,\n        Country VARCHAR(50) ,\n        Quantity VARCHAR(50) ,\n        UnitPrice INT ,\n        TotalAmount INT,\n        Domain VARCHAR(50) \n    )\n    WITH \n    (  \n    LOCATION ='enrichedSales',\n        DATA_SOURCE=silver_source,\n        FILE_FORMAT = parquet_format\n    )",
 			"metadata": {
 				"language": "sql"
 			},
